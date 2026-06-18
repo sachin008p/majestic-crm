@@ -6,7 +6,6 @@ const TaskCreate = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [users, setUsers] = useState([]);
   const [leads, setLeads] = useState([]);
   const [form, setForm] = useState({
     title: '',
@@ -19,7 +18,6 @@ const TaskCreate = () => {
   });
 
   useEffect(() => {
-    // Users aur Leads fetch karo
     api.get('/api/leads').then(r => setLeads(r.data)).catch(() => {});
   }, []);
 

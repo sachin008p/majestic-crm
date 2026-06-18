@@ -7,8 +7,8 @@ const statusStyles = {
   CONTACTED: { background: '#fef3c7', color: '#854d0e' },
   QUALIFIED: { background: '#d1fae5', color: '#166534' },
   NEGOTIATION: { background: '#ede9fe', color: '#6b21a8' },
-  CLOSED_WON: { background: '#d1fae5', color: '#065f46' },
-  CLOSED_LOST: { background: '#fee2e2', color: '#991b1b' },
+  WON: { background: '#d1fae5', color: '#065f46' },
+  LOST: { background: '#fee2e2', color: '#991b1b' },
 };
 
 const formatBudget = (budget) => {
@@ -101,7 +101,7 @@ const LeadList = () => {
           { label: 'Total', value: leads.length, color: '#6366f1' },
           { label: 'New', value: leads.filter(l => l.status === 'NEW').length, color: '#2563eb' },
           { label: 'Qualified', value: leads.filter(l => l.status === 'QUALIFIED').length, color: '#059669' },
-          { label: 'Closed Won', value: leads.filter(l => l.status === 'CLOSED_WON').length, color: '#065f46' },
+          { label: 'Won', value: leads.filter(l => l.status === 'WON').length, color: '#065f46' },
         ].map((stat) => (
           <div key={stat.label} className="glass rounded-2xl p-4 text-center">
             <p className="text-2xl font-bold" style={{ color: stat.color }}>{stat.value}</p>

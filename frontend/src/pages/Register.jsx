@@ -9,7 +9,7 @@ const Register = () => {
     email: '',
     password: '',
     phone: '',
-    role: 'ROLE_ADMIN' // Default role
+    role: 'ADMIN'
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -56,8 +56,9 @@ const Register = () => {
           <input name="phone" placeholder="Phone" onChange={handleChange} required style={{ padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }} />
           
           <select name="role" onChange={handleChange} style={{ padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }}>
-            <option value="ROLE_ADMIN">Admin</option>
-            <option value="ROLE_USER">User</option>
+            <option value="ADMIN">Admin</option>
+            <option value="MANAGER">Manager</option>
+            <option value="SALES">Sales</option>
           </select>
 
           <button type="submit" disabled={loading} style={{ padding: '10px', background: '#4f46e5', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}>

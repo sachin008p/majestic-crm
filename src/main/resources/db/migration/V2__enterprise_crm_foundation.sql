@@ -82,16 +82,15 @@ CREATE TABLE IF NOT EXISTS opportunities (
 
 CREATE TABLE IF NOT EXISTS tasks (
     id BIGSERIAL PRIMARY KEY,
-    owner_id BIGINT NOT NULL REFERENCES users(id),
     title VARCHAR(180) NOT NULL,
     description TEXT,
-    due_at TIMESTAMP WITH TIME ZONE,
-    status VARCHAR(40) NOT NULL DEFAULT 'OPEN',
-    priority VARCHAR(30) NOT NULL DEFAULT 'MEDIUM',
-    related_type VARCHAR(80),
-    related_id BIGINT,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
-    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+    due_date TIMESTAMP NOT NULL,
+    status VARCHAR(40) NOT NULL DEFAULT 'PENDING',
+    priority VARCHAR(30) DEFAULT 'MEDIUM',
+    assigned_to_id BIGINT NOT NULL REFERENCES users(id),
+    lead_id BIGINT REFERENCES leads(id),
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS audit_logs (
@@ -110,5 +109,5 @@ CREATE TABLE IF NOT EXISTS audit_logs (
 CREATE INDEX IF NOT EXISTS idx_companies_tenant_name ON companies(tenant_id, name);
 CREATE INDEX IF NOT EXISTS idx_contacts_company ON contacts(company_id);
 CREATE INDEX IF NOT EXISTS idx_opportunities_owner_stage ON opportunities(owner_id, stage);
-CREATE INDEX IF NOT EXISTS idx_tasks_owner_status_due ON tasks(owner_id, status, due_at);
+CREATE INDEX IF NOT EXISTS idx_tasks_assigned_status_due ON tasks(assigned_to_id, status, due_date);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_entity ON audit_logs(entity_type, entity_id);

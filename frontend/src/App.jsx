@@ -28,6 +28,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
           <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
             <Route path="/dashboard" element={<Dashboard />} />
             
@@ -47,8 +48,6 @@ function App() {
             <Route path="/tasks/create" element={<TaskCreate />} />
             <Route path="/tasks/:id/edit" element={<TaskEdit />} />
 			
-			<Route path="/register" element={<Register />} />
-            
             <Route path="/profile" element={<Profile />} />
             <Route path="/settings" element={<Settings />} />
           </Route>

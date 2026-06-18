@@ -16,7 +16,7 @@ export const AuthProvider = ({ children }) => {
       if (data && data.token) {
         localStorage.setItem(tokenKey, data.token);
         setToken(data.token);
-        setUser({ email, name: data.name || '' });
+        setUser({ email: data.email || email, name: data.name || data.email || email, roles: data.roles || [] });
         return { success: true };
       }
       return { success: false, error: data?.message || 'Login failed' };
@@ -32,10 +32,10 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    if (token) {
-      // token exists
-    }
-  }, [token]);
+    const handleForcedLogout = () => logout();
+    window.addEventListener('logout', handleForcedLogout);
+    return () => window.removeEventListener('logout', handleForcedLogout);
+  }, []);
 
   return (
     <AuthContext.Provider value={{ token, user, isAuthenticated, login, logout }}>

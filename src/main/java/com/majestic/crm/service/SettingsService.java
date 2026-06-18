@@ -4,6 +4,7 @@ import com.majestic.crm.dto.SettingsRequest;
 import com.majestic.crm.entity.Settings;
 import com.majestic.crm.repository.SettingsRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class SettingsService {
@@ -14,6 +15,7 @@ public class SettingsService {
         this.repository = repository;
     }
 
+    @Transactional
     public Settings save(SettingsRequest request) {
 
         Settings settings;
@@ -30,17 +32,18 @@ public class SettingsService {
         settings.setAddress(request.getAddress());
         settings.setWebsite(request.getWebsite());
 
-        settings.setEmailLeads(request.getEmailLeads());
-        settings.setEmailTasks(request.getEmailTasks());
-        settings.setEmailCustomers(request.getEmailCustomers());
-        settings.setTaskReminders(request.getTaskReminders());
-        settings.setLeadUpdates(request.getLeadUpdates());
+        settings.setEmailLeads(Boolean.TRUE.equals(request.getEmailLeads()));
+        settings.setEmailTasks(Boolean.TRUE.equals(request.getEmailTasks()));
+        settings.setEmailCustomers(Boolean.TRUE.equals(request.getEmailCustomers()));
+        settings.setTaskReminders(Boolean.TRUE.equals(request.getTaskReminders()));
+        settings.setLeadUpdates(Boolean.TRUE.equals(request.getLeadUpdates()));
 
-        settings.setTheme(request.getTheme());
+        settings.setTheme("dark".equals(request.getTheme()) ? "dark" : "light");
 
         return repository.save(settings);
     }
 
+    @Transactional(readOnly = true)
     public Settings getSettings() {
         return repository.findAll()
                 .stream()

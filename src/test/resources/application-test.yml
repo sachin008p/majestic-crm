@@ -16,9 +16,8 @@ spring:
     locations: classpath:db/migration
 
 app:
-  jwt:
-    secret: test-secret-key-with-at-least-sixty-four-characters-for-hmac-signing-123456
-    expiration-ms: 900000
+  jwt-secret: test-secret-key-with-at-least-sixty-four-characters-for-hmac-signing-123456
+  jwt-expiration-ms: 900000
 
 management:
   endpoints:

@@ -47,7 +47,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiError> handleGlobalException(Exception ex) {
         ApiError apiError = ApiError.builder()
                 .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                .message(ex.getMessage())
+                .message("Internal server error")
                 .timestamp(LocalDateTime.now())
                 .build();
         return new ResponseEntity<>(apiError, HttpStatus.INTERNAL_SERVER_ERROR);

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
+import { applyTheme } from '../../utils/theme';
 
 export default function Settings() {
   const [activeTab, setActiveTab] = useState('company');
@@ -27,11 +28,6 @@ export default function Settings() {
 
   // Theme ko DOM pe apply karo — yahi miss tha
   useEffect(() => {
-    document.documentElement.classList.remove('light', 'dark');
-    document.documentElement.classList.add(theme);
-  }, [theme]);
-
-  useEffect(() => {
     const loadSettings = async () => {
       try {
         const res = await api.get('/api/settings');
@@ -54,7 +50,9 @@ export default function Settings() {
           leadUpdates: data.leadUpdates ?? true,
         });
 
-        setTheme(data.theme || 'light');
+        const savedTheme = applyTheme(data.theme);
+        setTheme(savedTheme);
+        
       } catch (err) {
         console.error('Settings load failed:', err);
         setError('Settings load nahi ho sake. Page refresh karo.');
@@ -63,7 +61,6 @@ export default function Settings() {
 
     loadSettings();
   }, []);
-
   const handleSave = async () => {
     setSaving(true);
     setError(null);
@@ -219,7 +216,7 @@ export default function Settings() {
                 ].map(t => (
                   <button
                     key={t.id}
-                    onClick={() => setTheme(t.id)}
+                    onClick={() => setTheme(applyTheme(t.id))}
                     className={`p-4 rounded-2xl border-2 transition-all ${theme === t.id ? 'border-indigo-500' : 'border-slate-200'}`}
                   >
                     <div className={`${t.bg} ${t.border} border rounded-xl p-3 mb-3`}>

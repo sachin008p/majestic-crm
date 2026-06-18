@@ -15,7 +15,7 @@ const LeadCreate = () => {
     status: 'NEW',
     budget: '',
     notes: '',
-    assignedToId: 5,
+    assignedToId: '',
   });
 
   const handleChange = (e) => {
@@ -31,7 +31,7 @@ const LeadCreate = () => {
       await leadService.createLead({
         ...formData,
         budget: formData.budget ? Number(formData.budget) : null,
-        assignedToId: Number(formData.assignedToId),
+        assignedToId: formData.assignedToId ? Number(formData.assignedToId) : null,
       });
       navigate('/leads');
     } catch (error) {
@@ -127,8 +127,8 @@ const LeadCreate = () => {
                 <option value="CONTACTED">Contacted</option>
                 <option value="QUALIFIED">Qualified</option>
                 <option value="NEGOTIATION">Negotiation</option>
-                <option value="CLOSED_WON">Closed Won</option>
-                <option value="CLOSED_LOST">Closed Lost</option>
+                <option value="WON">Won</option>
+                <option value="LOST">Lost</option>
               </select>
             </div>
 
@@ -140,6 +140,18 @@ const LeadCreate = () => {
                 value={formData.budget}
                 onChange={handleChange}
                 placeholder="500000"
+                className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Assigned User ID</label>
+              <input
+                type="number"
+                name="assignedToId"
+                value={formData.assignedToId}
+                onChange={handleChange}
+                placeholder="Optional"
                 className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>

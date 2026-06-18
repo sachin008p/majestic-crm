@@ -9,9 +9,9 @@ const getStatusColor = (status) => {
       return "bg-yellow-100 text-yellow-700";
     case "NEGOTIATION":
       return "bg-orange-100 text-orange-700";
-    case "CLOSED_WON":
+    case "WON":
       return "bg-green-100 text-green-700";
-    case "CLOSED_LOST":
+    case "LOST":
       return "bg-red-100 text-red-700";
     default:
       return "bg-slate-100 text-slate-700";
