@@ -1,0 +1,38 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: majestic-crm-postgres
+    environment:
+      POSTGRES_DB: majestic_crm
+      POSTGRES_USER: majestic
+      POSTGRES_PASSWORD: majestic_dev_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U majestic -d majestic_crm"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: .
+    container_name: majestic-crm-api
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SERVER_PORT: 8080
+      DB_URL: jdbc:postgresql://postgres:5432/majestic_crm
+      DB_USERNAME: majestic
+      DB_PASSWORD: majestic_dev_password
+      JWT_SECRET: a3f9b5c2d4e6f8g1h2i3j4k5l6m7n8o9p0q1r2s3t4u5v6w7x8y9z0ab1cd2ef3
+      JWT_EXPIRATION_MS: 900000
+      CORS_ALLOWED_ORIGINS: http://localhost:3000,http://localhost:5173
+    ports:
+      - "8080:8080"
+
+volumes:
+  postgres_data:

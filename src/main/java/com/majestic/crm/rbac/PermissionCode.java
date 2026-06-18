@@ -1,0 +1,18 @@
+package com.majestic.crm.rbac;
+
+public enum PermissionCode {
+    LEAD_CREATE,
+    LEAD_READ_OWN,
+    LEAD_READ_TEAM,
+    LEAD_READ_ALL,
+    LEAD_UPDATE,
+    LEAD_ASSIGN,
+    USER_MANAGE,
+    COMPANY_MANAGE,
+    CONTACT_MANAGE,
+    OPPORTUNITY_MANAGE,
+    TASK_MANAGE,
+    REPORT_VIEW,
+    AUDIT_VIEW,
+    SETTINGS_MANAGE
+}

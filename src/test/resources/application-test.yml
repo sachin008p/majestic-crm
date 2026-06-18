@@ -1,0 +1,27 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:majestic_crm_test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+app:
+  jwt:
+    secret: test-secret-key-with-at-least-sixty-four-characters-for-hmac-signing-123456
+    expiration-ms: 900000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
