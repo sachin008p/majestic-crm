@@ -4,13 +4,15 @@ import api from '../../services/api';
 export default function Settings() {
   const [activeTab, setActiveTab] = useState('company');
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
 
   const [company, setCompany] = useState({
-    name: 'Majestic Realities',
-    email: 'info@majesticrealities.com',
-    phone: '+91 11111111111',
-    address: 'Mumbai, Maharashtra, India',
-    website: 'www.majesticrealities.com',
+    name: '',
+    email: '',
+    phone: '',
+    address: '',
+    website: '',
   });
 
   const [notifications, setNotifications] = useState({
@@ -20,27 +22,28 @@ export default function Settings() {
     taskReminders: true,
     leadUpdates: true,
   });
-  
-  const [theme, setTheme] = useState("light");
-  
-  
-  useEffect(() => {
 
+  const [theme, setTheme] = useState('light');
+
+  // Theme ko DOM pe apply karo — yahi miss tha
+  useEffect(() => {
+    document.documentElement.classList.remove('light', 'dark');
+    document.documentElement.classList.add(theme);
+  }, [theme]);
+
+  useEffect(() => {
     const loadSettings = async () => {
       try {
-
-        const res = await api.get("/api/settings");
-
+        const res = await api.get('/api/settings');
         if (!res.data) return;
-
         const data = res.data;
 
         setCompany({
-          name: data.companyName || "",
-          email: data.email || "",
-          phone: data.phone || "",
-          address: data.address || "",
-          website: data.website || "",
+          name: data.companyName || '',
+          email: data.email || '',
+          phone: data.phone || '',
+          address: data.address || '',
+          website: data.website || '',
         });
 
         setNotifications({
@@ -51,45 +54,46 @@ export default function Settings() {
           leadUpdates: data.leadUpdates ?? true,
         });
 
-        setTheme(data.theme || "light");
-
+        setTheme(data.theme || 'light');
       } catch (err) {
-        console.error(err);
+        console.error('Settings load failed:', err);
+        setError('Settings load nahi ho sake. Page refresh karo.');
       }
     };
 
     loadSettings();
-
   }, []);
 
   const handleSave = async () => {
+    setSaving(true);
+    setError(null);
     try {
-      await api.post("/api/settings", {
+      await api.post('/api/settings', {
         companyName: company.name,
         email: company.email,
         phone: company.phone,
         address: company.address,
         website: company.website,
-
         emailLeads: notifications.emailLeads,
         emailTasks: notifications.emailTasks,
         emailCustomers: notifications.emailCustomers,
         taskReminders: notifications.taskReminders,
         leadUpdates: notifications.leadUpdates,
-		
-
         theme,
       });
-	  
 
       setSaved(true);
-
-      setTimeout(() => {
-        setSaved(false);
-      }, 3000);
-
-    } catch (error) {
-      console.error("Settings save failed:", error);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (err) {
+      console.error('Settings save failed:', err);
+      // Backend se actual error message dikhao
+      const msg =
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        'Save nahi ho saka. Dobara try karo.';
+      setError(msg);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -99,6 +103,16 @@ export default function Settings() {
     { id: 'theme', label: 'Appearance', icon: 'M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01' },
     { id: 'users', label: 'Users', icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z' },
   ];
+
+  const SaveButton = () => (
+    <button
+      onClick={handleSave}
+      disabled={saving}
+      className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 disabled:opacity-60 disabled:cursor-not-allowed text-white py-2.5 rounded-xl font-semibold transition-all mt-2"
+    >
+      {saving ? 'Saving...' : 'Save Changes'}
+    </button>
+  );
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 animate-fade-in pb-10">
@@ -111,8 +125,15 @@ export default function Settings() {
         )}
       </div>
 
+      {/* Error banner */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-xl">
+          ⚠️ {error}
+        </div>
+      )}
+
       <div className="flex gap-6">
-        {/* Sidebar Tabs */}
+        {/* Sidebar */}
         <div className="w-48 shrink-0">
           <div className="glass rounded-2xl p-3 space-y-1">
             {tabs.map(tab => (
@@ -137,7 +158,6 @@ export default function Settings() {
         {/* Content */}
         <div className="flex-1 glass rounded-2xl p-6">
 
-          {/* Company */}
           {activeTab === 'company' && (
             <div className="space-y-5">
               <h2 className="text-lg font-bold text-slate-800 mb-4">Company Information</h2>
@@ -158,16 +178,10 @@ export default function Settings() {
                   />
                 </div>
               ))}
-              <button
-                onClick={handleSave}
-                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white py-2.5 rounded-xl font-semibold transition-all mt-2"
-              >
-                Save Changes
-              </button>
+              <SaveButton />
             </div>
           )}
 
-          {/* Notifications */}
           {activeTab === 'notifications' && (
             <div className="space-y-4">
               <h2 className="text-lg font-bold text-slate-800 mb-4">Notification Preferences</h2>
@@ -191,20 +205,17 @@ export default function Settings() {
                   </button>
                 </div>
               ))}
-              <button onClick={handleSave} className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white py-2.5 rounded-xl font-semibold transition-all mt-2">
-                Save Changes
-              </button>
+              <SaveButton />
             </div>
           )}
 
-          {/* Theme */}
           {activeTab === 'theme' && (
             <div className="space-y-4">
               <h2 className="text-lg font-bold text-slate-800 mb-4">Appearance</h2>
               <div className="grid grid-cols-2 gap-4">
                 {[
-                  { id: 'light', label: 'Light Mode', bg: 'bg-white', text: 'text-slate-800', border: 'border-slate-200' },
-                  { id: 'dark', label: 'Dark Mode', bg: 'bg-slate-900', text: 'text-white', border: 'border-slate-700' },
+                  { id: 'light', label: 'Light Mode', bg: 'bg-white', border: 'border-slate-200' },
+                  { id: 'dark', label: 'Dark Mode', bg: 'bg-slate-900', border: 'border-slate-700' },
                 ].map(t => (
                   <button
                     key={t.id}
@@ -220,13 +231,10 @@ export default function Settings() {
                   </button>
                 ))}
               </div>
-              <button onClick={handleSave} className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white py-2.5 rounded-xl font-semibold transition-all mt-2">
-                Save Changes
-              </button>
+              <SaveButton />
             </div>
           )}
 
-          {/* Users */}
           {activeTab === 'users' && (
             <div className="space-y-4">
               <h2 className="text-lg font-bold text-slate-800 mb-4">User Management</h2>
@@ -251,7 +259,7 @@ export default function Settings() {
                 ))}
               </div>
               <div className="border-t border-slate-100 pt-4">
-                <p className="text-xs text-slate-400 text-center">New users register karne ke liye Login page ka register API use karo</p>
+                <p className="text-xs text-slate-400 text-center">Naye users ke liye Login page ka register API use karo</p>
               </div>
             </div>
           )}

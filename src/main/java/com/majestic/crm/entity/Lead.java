@@ -20,9 +20,9 @@ public class Lead {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(name = "full_name", nullable = false)
     private String name;
-
+    
     @Column(nullable = false)
     private String email;
 

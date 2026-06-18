@@ -5,8 +5,8 @@ import { leadService } from '../../services/leadService';
 const LeadCreate = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   
-  // Form State
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -15,6 +15,7 @@ const LeadCreate = () => {
     status: 'NEW',
     budget: '',
     notes: '',
+    assignedToId: 5,
   });
 
   const handleChange = (e) => {
@@ -24,46 +25,47 @@ const LeadCreate = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.name || !formData.email || !formData.phone) {
-      alert('Name, Email, and Phone are required!');
-      return;
-    }
-
+    setError('');
     setLoading(true);
     try {
-      // Call Backend API
-      await leadService.createLead(formData);
-      alert('Lead created successfully!');
-      navigate('/leads'); // Redirect back to list
+      await leadService.createLead({
+        ...formData,
+        budget: formData.budget ? Number(formData.budget) : null,
+        assignedToId: Number(formData.assignedToId),
+      });
+      navigate('/leads');
     } catch (error) {
       console.error('Error creating lead:', error);
-      alert('Failed to create lead. Please try again.');
+      setError(error.response?.data?.message || 'Failed to create lead');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={{ padding: '24px', maxWidth: '800px', margin: '0 auto' }}>
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#1e293b' }}>Add New Lead</h1>
+    <div className="max-w-3xl mx-auto animate-fade-in pb-10">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold text-slate-800">Add New Lead</h1>
         <button
           onClick={() => navigate('/leads')}
-          style={{ background: 'none', border: '1px solid #d1d5db', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', color: '#6b7280' }}
+          className="text-sm text-slate-500 hover:text-slate-700 border border-slate-200 px-4 py-2 rounded-xl transition-all"
         >
           ← Back to List
         </button>
       </div>
 
-      {/* Form Card */}
-      <div style={{ background: '#fff', padding: '24px', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
-        <form onSubmit={handleSubmit}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-            
-            {/* Name */}
+      {error && (
+        <div className="mb-4 bg-red-50 border border-red-200 text-red-600 p-3 rounded-xl text-sm">
+          {error}
+        </div>
+      )}
+
+      <div className="glass rounded-2xl p-6">
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+
             <div>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: '#374151' }}>Full Name *</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Full Name *</label>
               <input
                 type="text"
                 name="name"
@@ -71,13 +73,12 @@ const LeadCreate = () => {
                 onChange={handleChange}
                 required
                 placeholder="John Doe"
-                style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '8px', outline: 'none' }}
+                className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
 
-            {/* Email */}
             <div>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: '#374151' }}>Email Address *</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Email Address *</label>
               <input
                 type="email"
                 name="email"
@@ -85,13 +86,12 @@ const LeadCreate = () => {
                 onChange={handleChange}
                 required
                 placeholder="john@example.com"
-                style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '8px', outline: 'none' }}
+                className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
 
-            {/* Phone */}
             <div>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: '#374151' }}>Phone Number *</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Phone Number *</label>
               <input
                 type="tel"
                 name="phone"
@@ -99,81 +99,77 @@ const LeadCreate = () => {
                 onChange={handleChange}
                 required
                 placeholder="+91 98765 43210"
-                style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '8px', outline: 'none' }}
+                className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
 
-            {/* Source */}
             <div>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: '#374151' }}>Lead Source</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Lead Source</label>
               <input
                 type="text"
                 name="source"
                 value={formData.source}
                 onChange={handleChange}
                 placeholder="Website, Referral, Social Media..."
-                style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '8px', outline: 'none' }}
+                className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
 
-            {/* Status */}
             <div>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: '#374151' }}>Status</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Status</label>
               <select
                 name="status"
                 value={formData.status}
                 onChange={handleChange}
-                style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '8px', outline: 'none', background: '#fff' }}
+                className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
               >
                 <option value="NEW">New</option>
                 <option value="CONTACTED">Contacted</option>
                 <option value="QUALIFIED">Qualified</option>
                 <option value="NEGOTIATION">Negotiation</option>
-                <option value="WON">Won</option>
-                <option value="LOST">Lost</option>
+                <option value="CLOSED_WON">Closed Won</option>
+                <option value="CLOSED_LOST">Closed Lost</option>
               </select>
             </div>
 
-            {/* Budget */}
             <div>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: '#374151' }}>Estimated Budget (₹)</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Budget (₹)</label>
               <input
                 type="number"
                 name="budget"
                 value={formData.budget}
                 onChange={handleChange}
-                placeholder="50000"
-                style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '8px', outline: 'none' }}
+                placeholder="500000"
+                className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
 
-            {/* Notes */}
-            <div style={{ gridColumn: '1 / -1' }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: '#374151' }}>Notes</label>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-slate-700 mb-1">Notes</label>
               <textarea
                 name="notes"
                 value={formData.notes}
                 onChange={handleChange}
-                rows="4"
-                placeholder="Add any additional information about this lead..."
-                style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '8px', outline: 'none', resize: 'vertical' }}
+                rows={4}
+                placeholder="Add any additional information..."
+                className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
               />
             </div>
+
           </div>
 
-          {/* Buttons */}
-          <div style={{ marginTop: '24px', display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+          <div className="flex gap-3 justify-end pt-2">
             <button
               type="button"
               onClick={() => navigate('/leads')}
-              style={{ padding: '10px 24px', border: '1px solid #d1d5db', borderRadius: '8px', background: '#fff', cursor: 'pointer', fontWeight: '500' }}
+              className="px-6 py-2.5 border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-50 font-medium text-sm transition-all"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              style={{ padding: '10px 24px', border: 'none', borderRadius: '8px', background: '#6366f1', color: '#fff', cursor: loading ? 'not-allowed' : 'pointer', fontWeight: '500', opacity: loading ? 0.7 : 1 }}
+              className="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-xl font-medium text-sm transition-all disabled:opacity-50"
             >
               {loading ? 'Saving...' : 'Save Lead'}
             </button>
