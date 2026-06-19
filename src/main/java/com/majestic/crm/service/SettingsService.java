@@ -18,13 +18,10 @@ public class SettingsService {
     @Transactional
     public Settings save(SettingsRequest request) {
 
-        Settings settings;
-
-        if(repository.count() > 0) {
-            settings = repository.findAll().get(0);
-        } else {
-            settings = new Settings();
-        }
+        Settings settings = repository.findAll()
+                .stream()
+                .findFirst()
+                .orElse(new Settings());
 
         settings.setCompanyName(request.getCompanyName());
         settings.setEmail(request.getEmail());
@@ -38,7 +35,7 @@ public class SettingsService {
         settings.setTaskReminders(Boolean.TRUE.equals(request.getTaskReminders()));
         settings.setLeadUpdates(Boolean.TRUE.equals(request.getLeadUpdates()));
 
-        settings.setTheme("dark".equals(request.getTheme()) ? "dark" : "light");
+        settings.setTheme(request.getTheme());
 
         return repository.save(settings);
     }
@@ -48,6 +45,6 @@ public class SettingsService {
         return repository.findAll()
                 .stream()
                 .findFirst()
-                .orElse(null);
+                .orElseGet(Settings::new);
     }
 }

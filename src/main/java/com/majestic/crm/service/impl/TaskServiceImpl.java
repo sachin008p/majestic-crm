@@ -11,6 +11,9 @@ import com.majestic.crm.repository.LeadRepository;
 import com.majestic.crm.repository.TaskRepository;
 import com.majestic.crm.repository.UserRepository;
 import com.majestic.crm.service.TaskService;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,8 +36,11 @@ public class TaskServiceImpl implements TaskService {
     @Override
     @Transactional
     public TaskResponse createTask(TaskRequest request) {
-        User assignedTo = userRepository.findById(request.getAssignedToId())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + request.getAssignedToId()));
+        User assignedTo = getCurrentUser();
+        if (request.getAssignedToId() != null && isAdmin()) {
+            assignedTo = userRepository.findById(request.getAssignedToId())
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + request.getAssignedToId()));
+        }
 
         Lead lead = null;
         if (request.getLeadId() != null) {
@@ -60,9 +66,13 @@ public class TaskServiceImpl implements TaskService {
     public TaskResponse updateTask(Long id, TaskRequest request) {
         Task task = taskRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + id));
+        ensureCanAccess(task);
 
-        User assignedTo = userRepository.findById(request.getAssignedToId())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + request.getAssignedToId()));
+        User assignedTo = task.getAssignedTo();
+        if (request.getAssignedToId() != null && isAdmin()) {
+            assignedTo = userRepository.findById(request.getAssignedToId())
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + request.getAssignedToId()));
+        }
 
         Lead lead = null;
         if (request.getLeadId() != null) {
@@ -86,13 +96,18 @@ public class TaskServiceImpl implements TaskService {
     public TaskResponse getTask(Long id) {
         Task task = taskRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + id));
+        ensureCanAccess(task);
         return toResponse(task);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<TaskResponse> getAllTasks() {
-        return taskRepository.findAll().stream()
+        List<Task> tasks = isAdmin()
+                ? taskRepository.findAll()
+                : taskRepository.findByAssignedToId(getCurrentUser().getId());
+
+        return tasks.stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
@@ -102,7 +117,33 @@ public class TaskServiceImpl implements TaskService {
     public void deleteTask(Long id) {
         Task task = taskRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + id));
+        ensureCanAccess(task);
         taskRepository.delete(task);
+    }
+
+    private User getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication.getName() == null) {
+            throw new AccessDeniedException("Authentication required");
+        }
+        return userRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new AccessDeniedException("Authenticated user not found"));
+    }
+
+    private boolean isAdmin() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
+    }
+
+    private void ensureCanAccess(Task task) {
+        if (isAdmin()) {
+            return;
+        }
+        User currentUser = getCurrentUser();
+        if (task.getAssignedTo() == null || !task.getAssignedTo().getId().equals(currentUser.getId())) {
+            throw new AccessDeniedException("You can access only assigned tasks");
+        }
     }
 
     private TaskResponse toResponse(Task task) {

@@ -30,22 +30,21 @@ public class Settings {
     @Column(length = 255)
     private String website;
 
-    // FIX: Add @Column with nullable = false and defaults for Boolean fields
-    @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT false")
-    private Boolean emailLeads;
+    @Column(nullable = false)
+    private boolean emailLeads = false;
 
-    @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT false")
-    private Boolean emailTasks;
+    @Column(nullable = false)
+    private boolean emailTasks = false;
 
-    @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT false")
-    private Boolean emailCustomers;
+    @Column(nullable = false)
+    private boolean emailCustomers = false;
 
-    @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT false")
-    private Boolean taskReminders;
+    @Column(nullable = false)
+    private boolean taskReminders = false;
 
-    @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT false")
-    private Boolean leadUpdates;
+    @Column(nullable = false)
+    private boolean leadUpdates = false;
 
     @Column(length = 50)
-    private String theme;
+    private String theme = "light";
 }

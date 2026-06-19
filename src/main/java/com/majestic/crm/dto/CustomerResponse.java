@@ -18,6 +18,8 @@ public class CustomerResponse {
     private String phone;
     private String address;
     private String status;
+    private Long assignedToId;
+    private String assignedToName;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

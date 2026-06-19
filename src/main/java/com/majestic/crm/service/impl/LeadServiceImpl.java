@@ -9,6 +9,9 @@ import com.majestic.crm.exception.ResourceNotFoundException;
 import com.majestic.crm.repository.LeadRepository;
 import com.majestic.crm.repository.UserRepository;
 import com.majestic.crm.service.LeadService;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,8 +32,9 @@ public class LeadServiceImpl implements LeadService {
     @Override
     @Transactional
     public LeadResponse createLead(LeadRequest request) {
-        User assignedTo = null;
-        if (request.getAssignedToId() != null) {
+        User currentUser = getCurrentUser();
+        User assignedTo = currentUser;
+        if (request.getAssignedToId() != null && isAdmin()) {
             assignedTo = userRepository.findById(request.getAssignedToId())
                     .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + request.getAssignedToId()));
         }
@@ -54,9 +58,10 @@ public class LeadServiceImpl implements LeadService {
     public LeadResponse updateLead(Long id, LeadRequest request) {
         Lead lead = leadRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Lead not found with id: " + id));
+        ensureCanAccess(lead);
 
-        User assignedTo = null;
-        if (request.getAssignedToId() != null) {
+        User assignedTo = lead.getAssignedTo();
+        if (request.getAssignedToId() != null && isAdmin()) {
             assignedTo = userRepository.findById(request.getAssignedToId())
                     .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + request.getAssignedToId()));
         }
@@ -78,13 +83,18 @@ public class LeadServiceImpl implements LeadService {
     public LeadResponse getLead(Long id) {
         Lead lead = leadRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Lead not found with id: " + id));
+        ensureCanAccess(lead);
         return toResponse(lead);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<LeadResponse> getAllLeads() {
-        return leadRepository.findAll().stream()
+        List<Lead> leads = isAdmin()
+                ? leadRepository.findAll()
+                : leadRepository.findByAssignedToId(getCurrentUser().getId());
+
+        return leads.stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
@@ -94,7 +104,33 @@ public class LeadServiceImpl implements LeadService {
     public void deleteLead(Long id) {
         Lead lead = leadRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Lead not found with id: " + id));
+        ensureCanAccess(lead);
         leadRepository.delete(lead);
+    }
+
+    private User getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication.getName() == null) {
+            throw new AccessDeniedException("Authentication required");
+        }
+        return userRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new AccessDeniedException("Authenticated user not found"));
+    }
+
+    private boolean isAdmin() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
+    }
+
+    private void ensureCanAccess(Lead lead) {
+        if (isAdmin()) {
+            return;
+        }
+        User currentUser = getCurrentUser();
+        if (lead.getAssignedTo() == null || !lead.getAssignedTo().getId().equals(currentUser.getId())) {
+            throw new AccessDeniedException("You can access only assigned leads");
+        }
     }
 
     private LeadResponse toResponse(Lead lead) {

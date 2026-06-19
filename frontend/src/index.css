@@ -4,32 +4,79 @@
 @tailwind components;
 @tailwind utilities;
 
+/* =========================
+   BASE THEME (CRM STYLE)
+========================= */
 @layer base {
   body {
     font-family: 'Outfit', sans-serif;
-    @apply bg-slate-50 text-slate-900;
-  }
-
-  html.dark body {
-    @apply bg-slate-950 text-slate-100;
+    background: var(--bg);
+    color: var(--text);
+    transition: all 0.3s ease;
   }
 }
 
+/* =========================
+   LIGHT + DARK CRM THEME
+========================= */
+:root {
+  --bg: #f6f8fc;
+  --card: #ffffff;
+  --text: #0f172a;
+  --muted: #64748b;
+  --border: #e5e7eb;
+
+  --primary: #2563eb;
+  --success: #16a34a;
+  --warning: #f59e0b;
+  --danger: #dc2626;
+}
+
+html.dark {
+  --bg: #0b1220;
+  --card: #111827;
+  --text: #f8fafc;
+  --muted: #94a3b8;
+  --border: #1f2937;
+
+  --primary: #3b82f6;
+  --success: #22c55e;
+  --warning: #fbbf24;
+  --danger: #ef4444;
+}
+
+/* =========================
+   UTILITIES (NO BLUR HEAVY UI)
+========================= */
 @layer utilities {
+
+  /* clean glass (VERY LIGHT - optional use) */
   .glass {
-    @apply bg-white/70 backdrop-blur-md border border-white/20 shadow-xl;
+    @apply bg-white border border-slate-200 shadow-sm;
   }
+
   .glass-dark {
-    @apply bg-slate-900/80 backdrop-blur-md border border-slate-700/50 shadow-2xl text-white;
+    @apply bg-slate-900 border border-slate-700 shadow-sm text-white;
   }
+
+  /* animations */
   .animate-fade-in {
-    animation: fadeIn 0.5s ease-out forwards;
+    animation: fadeIn 0.4s ease-out forwards;
   }
+
   .animate-slide-up {
-    animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  /* CRM card hover polish */
+  .crm-card {
+    @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-md;
   }
 }
 
+/* =========================
+   KEYFRAMES
+========================= */
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }

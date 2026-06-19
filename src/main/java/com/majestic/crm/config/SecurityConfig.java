@@ -37,49 +37,74 @@ public class SecurityConfig {
     private final RestAuthenticationEntryPoint restAuthenticationEntryPoint;
     private final UserDetailsService userDetailsService;
 
-    
-
-    @Value("${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:3004,http://localhost:3005,http://localhost:5173}")
+    @Value("${app.cors.allowed-origins:http://localhost:3000,http://localhost:3004,http://localhost:3005,http://localhost:5173,http://localhost:5174}")
     private String allowedOrigins;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .csrf(csrf -> csrf.disable())
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .exceptionHandling(exception -> exception.authenticationEntryPoint(restAuthenticationEntryPoint))
-                .authenticationProvider(authenticationProvider())
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/actuator/health").permitAll()
-                        .requestMatchers("/api-docs/**", "/swagger-ui.html", "/swagger-ui/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/users").hasRole("ADMIN")
-                        .requestMatchers("/api/users/**").hasAnyRole("ADMIN", "MANAGER")
-                        .requestMatchers("/api/dashboard/admin").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/leads/*/assign").hasAnyRole("ADMIN", "MANAGER")
-                        .requestMatchers(HttpMethod.DELETE, "/api/leads/**").hasAnyRole("ADMIN", "MANAGER")
-                        .requestMatchers("/api/leads/**").hasAnyRole("ADMIN", "MANAGER", "SALES")
-                        .requestMatchers("/api/follow-ups/**").hasAnyRole("ADMIN", "MANAGER", "SALES")
-                        .anyRequest().authenticated())
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .csrf(csrf -> csrf.disable())
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .exceptionHandling(exception -> exception.authenticationEntryPoint(restAuthenticationEntryPoint))
+            .authenticationProvider(authenticationProvider())
+            .authorizeHttpRequests(auth -> auth
+
+                // PUBLIC
+                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll()
+                .requestMatchers("/actuator/health").permitAll()
+
+                // USERS
+                .requestMatchers(HttpMethod.POST, "/api/users").hasRole("ADMIN")
+                .requestMatchers("/api/users/**").hasAnyRole("ADMIN", "MANAGER")
+
+                // DASHBOARD
+                .requestMatchers("/api/dashboard/admin").hasRole("ADMIN")
+
+                // LEADS
+                .requestMatchers(HttpMethod.PUT, "/api/leads/*/assign").hasAnyRole("ADMIN", "MANAGER")
+                .requestMatchers(HttpMethod.DELETE, "/api/leads/**").hasAnyRole("ADMIN", "MANAGER")
+                .requestMatchers("/api/leads/**").hasAnyRole("ADMIN", "MANAGER", "SALES")
+
+                // CUSTOMERS
+                .requestMatchers(HttpMethod.DELETE, "/api/customers/**").hasAnyRole("ADMIN", "MANAGER")
+                .requestMatchers("/api/customers/**").hasAnyRole("ADMIN", "MANAGER", "SALES", "SUPPORT")
+
+                // TASKS
+                .requestMatchers(HttpMethod.DELETE, "/api/tasks/**").hasAnyRole("ADMIN", "MANAGER")
+                .requestMatchers("/api/tasks/**").hasAnyRole("ADMIN", "MANAGER", "SALES", "SUPPORT")
+
+                // FOLLOW UPS
+                .requestMatchers("/api/follow-ups/**").hasAnyRole("ADMIN", "MANAGER", "SALES", "SUPPORT")
+
+                // DEFAULT
+                .anyRequest().authenticated()
+            )
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
     }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(Arrays.stream(allowedOrigins.split(","))
-                .map(String::trim)
-                .filter(origin -> !origin.isBlank())
-                .toList());
+
+        configuration.setAllowedOriginPatterns(
+                Arrays.stream(allowedOrigins.split(","))
+                        .map(String::trim)
+                        .filter(o -> !o.isBlank())
+                        .toList()
+        );
+
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With"));
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         configuration.setExposedHeaders(List.of("Authorization"));
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
+
         return source;
     }
 

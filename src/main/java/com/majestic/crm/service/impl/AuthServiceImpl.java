@@ -42,30 +42,36 @@ public class AuthServiceImpl implements AuthService {
     public AuthResponse login(AuthRequest request) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                    request.getEmail(), request.getPassword())
-        );
+                        request.getEmail(),
+                        request.getPassword()));
+
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+
         String token = jwtUtil.generateToken(userDetails);
+
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
         return AuthResponse.builder()
                 .token(token)
                 .type("Bearer")
                 .id(user.getId())
                 .email(user.getEmail())
-                .roles(userDetails.getAuthorities().stream()
+                .roles(userDetails.getAuthorities()
+                        .stream()
                         .map(GrantedAuthority::getAuthority)
                         .collect(Collectors.toList()))
                 .build();
     }
-
+    
     @Override
     @Transactional
     public UserSummary register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new RuntimeException("Email already in use");
         }
-        Role role = roleRepository.findByName(request.getRole())
+        String roleName = request.getRole().replace("ROLE_", "").toUpperCase();
+        Role role = roleRepository.findByName(roleName)
                 .orElseThrow(() -> new ResourceNotFoundException("Role not found"));
         User user = User.builder()
                 .fullName(request.getFullName())
@@ -73,7 +79,7 @@ public class AuthServiceImpl implements AuthService {
                 .phone(request.getPhone())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .role(role)
-                .active(true)
+                .isActive(true)
                 .build();
         User savedUser = userRepository.save(user);
         return UserSummary.builder()

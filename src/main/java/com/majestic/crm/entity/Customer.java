@@ -33,6 +33,10 @@ public class Customer {
     @Column(nullable = false)
     private String status;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "assigned_to_id")
+    private User assignedTo;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 

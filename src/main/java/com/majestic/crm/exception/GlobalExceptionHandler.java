@@ -3,6 +3,7 @@ package com.majestic.crm.exception;
 import com.majestic.crm.dto.ApiError;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -41,6 +42,16 @@ public class GlobalExceptionHandler {
                 .errors(errors)
                 .build();
         return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ApiError> handleAuthenticationException(AuthenticationException ex) {
+        ApiError apiError = ApiError.builder()
+                .status(HttpStatus.UNAUTHORIZED.value())
+                .message("Invalid email or password")
+                .timestamp(LocalDateTime.now())
+                .build();
+        return new ResponseEntity<>(apiError, HttpStatus.UNAUTHORIZED);
     }
 
     @ExceptionHandler(Exception.class)

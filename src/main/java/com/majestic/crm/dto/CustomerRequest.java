@@ -26,4 +26,6 @@ public class CustomerRequest {
 
     @NotBlank(message = "Status is required")
     private String status;
+
+    private Long assignedToId;
 }

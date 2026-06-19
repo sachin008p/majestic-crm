@@ -46,7 +46,7 @@ public class User implements UserDetails { // <--- UserDetails Implement Kiya
     private Role role;
 
     @Column(name = "is_active", nullable = false)
-    private boolean active;
+    private boolean isActive;
     
     @CreationTimestamp
     private LocalDateTime createdAt;
@@ -58,7 +58,9 @@ public class User implements UserDetails { // <--- UserDetails Implement Kiya
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         if (role == null) return List.of();
-        return List.of(new SimpleGrantedAuthority(role.getName()));
+        String roleName = role.getName();
+        String authority = roleName.startsWith("ROLE_") ? roleName : "ROLE_" + roleName;
+        return List.of(new SimpleGrantedAuthority(authority));
     }
 
     @Override
@@ -74,5 +76,5 @@ public class User implements UserDetails { // <--- UserDetails Implement Kiya
     @Override public boolean isAccountNonExpired() { return true; }
     @Override public boolean isAccountNonLocked() { return true; }
     @Override public boolean isCredentialsNonExpired() { return true; }
-    @Override public boolean isEnabled() { return active; }
+    @Override public boolean isEnabled() { return isActive; }
 }
