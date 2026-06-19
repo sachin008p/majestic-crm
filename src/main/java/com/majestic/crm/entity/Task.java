@@ -34,7 +34,11 @@ public class Task {
     private String priority;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "assigned_to_id", nullable = false)
+    @JoinColumn(name = "company_id")
+    private Company company;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "assigned_to", nullable = false)
     private User assignedTo;
 
     @ManyToOne(fetch = FetchType.LAZY)

@@ -8,5 +8,6 @@ import java.util.List;
 
 @Repository
 public interface LeadRepository extends JpaRepository<Lead, Long> {
-    List<Lead> findByAssignedToId(Long userId);
+    List<Lead> findByAssignedToIdIn(List<Long> userIds);
+    List<Lead> findByCompanyIdAndAssignedToIdIn(Long companyId, List<Long> userIds);
 }

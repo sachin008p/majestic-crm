@@ -40,6 +40,10 @@ public class Lead {
     private BigDecimal budget;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "company_id")
+    private Company company;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "assigned_to_id")
     private User assignedTo;
 

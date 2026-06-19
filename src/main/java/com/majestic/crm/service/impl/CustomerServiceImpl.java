@@ -12,6 +12,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import com.majestic.crm.service.HierarchyService;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -22,10 +23,12 @@ public class CustomerServiceImpl implements CustomerService {
 
     private final CustomerRepository customerRepository;
     private final UserRepository userRepository;
+    private final HierarchyService hierarchyService;
 
-    public CustomerServiceImpl(CustomerRepository customerRepository, UserRepository userRepository) {
+    public CustomerServiceImpl(CustomerRepository customerRepository, UserRepository userRepository, HierarchyService hierarchyService) {
         this.customerRepository = customerRepository;
         this.userRepository = userRepository;
+        this.hierarchyService = hierarchyService;
     }
 
     @Override
@@ -83,9 +86,16 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     @Transactional(readOnly = true)
     public List<CustomerResponse> getAllCustomers() {
-        List<Customer> customers = isAdmin()
-                ? customerRepository.findAll()
-                : customerRepository.findByAssignedToId(getCurrentUser().getId());
+        User currentUser = getCurrentUser();
+        List<Long> visibleIds = hierarchyService.getVisibleUserIds(currentUser);
+        boolean isSuperAdmin = "SUPER_ADMIN".equalsIgnoreCase(currentUser.getRole().getName());
+        List<Customer> customers;
+        if (isSuperAdmin) {
+            customers = customerRepository.findAll();
+        } else {
+            Long companyId = currentUser.getCompany().getId();
+            customers = customerRepository.findByCompanyIdAndAssignedToIdIn(companyId, visibleIds);
+        }
 
         return customers.stream()
                 .map(this::toResponse)
@@ -117,12 +127,17 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     private void ensureCanAccess(Customer customer) {
-        if (isAdmin()) {
-            return;
-        }
         User currentUser = getCurrentUser();
-        if (customer.getAssignedTo() == null || !customer.getAssignedTo().getId().equals(currentUser.getId())) {
-            throw new AccessDeniedException("You can access only assigned customers");
+        List<Long> visibleIds = hierarchyService.getVisibleUserIds(currentUser);
+        boolean isSuperAdmin = "SUPER_ADMIN".equalsIgnoreCase(currentUser.getRole().getName());
+        if (isSuperAdmin) {
+            return; // Super admin can access any customer
+        }
+        if (customer.getCompany() == null || !customer.getCompany().getId().equals(currentUser.getCompany().getId())) {
+            throw new AccessDeniedException("You cannot access customers from another company");
+        }
+        if (customer.getAssignedTo() == null || !visibleIds.contains(customer.getAssignedTo().getId())) {
+            throw new AccessDeniedException("You can access only customers within your hierarchy");
         }
     }
 

@@ -31,20 +31,26 @@ public class Settings {
     private String website;
 
     @Column(nullable = false)
+    @Builder.Default
     private boolean emailLeads = false;
 
     @Column(nullable = false)
+    @Builder.Default
     private boolean emailTasks = false;
 
     @Column(nullable = false)
+    @Builder.Default
     private boolean emailCustomers = false;
 
     @Column(nullable = false)
+    @Builder.Default
     private boolean taskReminders = false;
 
     @Column(nullable = false)
+    @Builder.Default
     private boolean leadUpdates = false;
 
     @Column(length = 50)
+@Builder.Default
     private String theme = "light";
 }

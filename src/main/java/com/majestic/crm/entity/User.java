@@ -8,6 +8,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.majestic.crm.entity.Company;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
@@ -38,6 +39,14 @@ public class User implements UserDetails { // <--- UserDetails Implement Kiya
     @Column(nullable = false)
     private String password;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reporting_to_id")
+    private User reportingTo;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "company_id")
+    private Company company;
+
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "role_id", nullable = false)
     @JsonManagedReference
@@ -46,7 +55,12 @@ public class User implements UserDetails { // <--- UserDetails Implement Kiya
     private Role role;
 
     @Column(name = "is_active", nullable = false)
-    private boolean isActive;
+    @Builder.Default
+    private boolean isActive = true;
+
+    @Column(name = "must_change_password", nullable = false)
+    @Builder.Default
+    private boolean mustChangePassword = true;
     
     @CreationTimestamp
     private LocalDateTime createdAt;

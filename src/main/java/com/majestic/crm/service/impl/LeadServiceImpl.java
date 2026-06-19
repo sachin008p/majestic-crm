@@ -8,6 +8,7 @@ import com.majestic.crm.entity.User;
 import com.majestic.crm.exception.ResourceNotFoundException;
 import com.majestic.crm.repository.LeadRepository;
 import com.majestic.crm.repository.UserRepository;
+import com.majestic.crm.service.HierarchyService;
 import com.majestic.crm.service.LeadService;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
@@ -23,10 +24,12 @@ public class LeadServiceImpl implements LeadService {
 
     private final LeadRepository leadRepository;
     private final UserRepository userRepository;
+    private final HierarchyService hierarchyService;
 
-    public LeadServiceImpl(LeadRepository leadRepository, UserRepository userRepository) {
+    public LeadServiceImpl(LeadRepository leadRepository, UserRepository userRepository, HierarchyService hierarchyService) {
         this.leadRepository = leadRepository;
         this.userRepository = userRepository;
+        this.hierarchyService = hierarchyService;
     }
 
     @Override
@@ -90,9 +93,16 @@ public class LeadServiceImpl implements LeadService {
     @Override
     @Transactional(readOnly = true)
     public List<LeadResponse> getAllLeads() {
-        List<Lead> leads = isAdmin()
-                ? leadRepository.findAll()
-                : leadRepository.findByAssignedToId(getCurrentUser().getId());
+        User currentUser = getCurrentUser();
+        List<Long> visibleIds = hierarchyService.getVisibleUserIds(currentUser);
+        boolean isSuperAdmin = "SUPER_ADMIN".equalsIgnoreCase(currentUser.getRole().getName());
+        List<Lead> leads;
+        if (isSuperAdmin) {
+            leads = leadRepository.findAll();
+        } else {
+            Long companyId = currentUser.getCompany().getId();
+            leads = leadRepository.findByCompanyIdAndAssignedToIdIn(companyId, visibleIds);
+        }
 
         return leads.stream()
                 .map(this::toResponse)
@@ -124,12 +134,17 @@ public class LeadServiceImpl implements LeadService {
     }
 
     private void ensureCanAccess(Lead lead) {
-        if (isAdmin()) {
-            return;
-        }
         User currentUser = getCurrentUser();
-        if (lead.getAssignedTo() == null || !lead.getAssignedTo().getId().equals(currentUser.getId())) {
-            throw new AccessDeniedException("You can access only assigned leads");
+        List<Long> visibleIds = hierarchyService.getVisibleUserIds(currentUser);
+        boolean isSuperAdmin = "SUPER_ADMIN".equalsIgnoreCase(currentUser.getRole().getName());
+        if (isSuperAdmin) {
+            return; // Super admin can access any lead
+        }
+        if (lead.getCompany() == null || !lead.getCompany().getId().equals(currentUser.getCompany().getId())) {
+            throw new AccessDeniedException("You cannot access leads from another company");
+        }
+        if (!visibleIds.contains(lead.getAssignedTo().getId())) {
+            throw new AccessDeniedException("You can access only leads within your hierarchy");
         }
     }
 

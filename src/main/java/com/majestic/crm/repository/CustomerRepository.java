@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface CustomerRepository extends JpaRepository<Customer, Long> {
     List<Customer> findByAssignedToId(Long userId);
+    List<Customer> findByCompanyIdAndAssignedToIdIn(Long companyId, List<Long> userIds);
 }

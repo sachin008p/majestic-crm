@@ -10,6 +10,7 @@ import com.majestic.crm.exception.ResourceNotFoundException;
 import com.majestic.crm.repository.LeadRepository;
 import com.majestic.crm.repository.TaskRepository;
 import com.majestic.crm.repository.UserRepository;
+import com.majestic.crm.service.HierarchyService;
 import com.majestic.crm.service.TaskService;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
@@ -26,11 +27,13 @@ public class TaskServiceImpl implements TaskService {
     private final TaskRepository taskRepository;
     private final UserRepository userRepository;
     private final LeadRepository leadRepository;
+    private final HierarchyService hierarchyService;
 
-    public TaskServiceImpl(TaskRepository taskRepository, UserRepository userRepository, LeadRepository leadRepository) {
+    public TaskServiceImpl(TaskRepository taskRepository, UserRepository userRepository, LeadRepository leadRepository, HierarchyService hierarchyService) {
         this.taskRepository = taskRepository;
         this.userRepository = userRepository;
         this.leadRepository = leadRepository;
+        this.hierarchyService = hierarchyService;
     }
 
     @Override
@@ -56,6 +59,7 @@ public class TaskServiceImpl implements TaskService {
                 .priority(request.getPriority())
                 .assignedTo(assignedTo)
                 .lead(lead)
+                .company(assignedTo.getCompany())
                 .build();
 
         return toResponse(taskRepository.save(task));
@@ -87,6 +91,7 @@ public class TaskServiceImpl implements TaskService {
         task.setPriority(request.getPriority());
         task.setAssignedTo(assignedTo);
         task.setLead(lead);
+        task.setCompany(assignedTo.getCompany());
 
         return toResponse(taskRepository.save(task));
     }
@@ -103,9 +108,16 @@ public class TaskServiceImpl implements TaskService {
     @Override
     @Transactional(readOnly = true)
     public List<TaskResponse> getAllTasks() {
-        List<Task> tasks = isAdmin()
-                ? taskRepository.findAll()
-                : taskRepository.findByAssignedToId(getCurrentUser().getId());
+        User currentUser = getCurrentUser();
+        List<Long> visibleIds = hierarchyService.getVisibleUserIds(currentUser);
+        boolean isSuperAdmin = "SUPER_ADMIN".equalsIgnoreCase(currentUser.getRole().getName());
+        List<Task> tasks;
+        if (isSuperAdmin) {
+            tasks = taskRepository.findAll();
+        } else {
+            Long companyId = currentUser.getCompany().getId();
+            tasks = taskRepository.findByCompanyIdAndAssignedToIdIn(companyId, visibleIds);
+        }
 
         return tasks.stream()
                 .map(this::toResponse)
@@ -137,12 +149,17 @@ public class TaskServiceImpl implements TaskService {
     }
 
     private void ensureCanAccess(Task task) {
-        if (isAdmin()) {
-            return;
-        }
         User currentUser = getCurrentUser();
-        if (task.getAssignedTo() == null || !task.getAssignedTo().getId().equals(currentUser.getId())) {
-            throw new AccessDeniedException("You can access only assigned tasks");
+        List<Long> visibleIds = hierarchyService.getVisibleUserIds(currentUser);
+        boolean isSuperAdmin = "SUPER_ADMIN".equalsIgnoreCase(currentUser.getRole().getName());
+        if (isSuperAdmin) {
+            return; // Super admin can access any task
+        }
+        if (task.getCompany() == null || !task.getCompany().getId().equals(currentUser.getCompany().getId())) {
+            throw new AccessDeniedException("You cannot access tasks from another company");
+        }
+        if (!visibleIds.contains(task.getAssignedTo().getId())) {
+            throw new AccessDeniedException("You can access only tasks within your hierarchy");
         }
     }
 

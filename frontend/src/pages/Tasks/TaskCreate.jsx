@@ -7,6 +7,7 @@ const TaskCreate = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [leads, setLeads] = useState([]);
+  const [users, setUsers] = useState([]);
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -19,6 +20,7 @@ const TaskCreate = () => {
 
   useEffect(() => {
     api.get('/api/leads').then(r => setLeads(r.data)).catch(() => {});
+    api.get('/api/users').then(r => setUsers(r.data)).catch(() => {});
   }, []);
 
   const handleChange = (e) => {
@@ -36,9 +38,9 @@ const TaskCreate = () => {
         leadId: form.leadId ? Number(form.leadId) : null,
       });
       navigate('/tasks');
-	  } catch (err) {
-	    console.log("Full error:", err.response?.data);
-	    setError(JSON.stringify(err.response?.data) || 'Failed to create task');
+    } catch (err) {
+      console.log("Full error:", err.response?.data);
+      setError(JSON.stringify(err.response?.data) || 'Failed to create task');
     } finally {
       setLoading(false);
     }
@@ -54,6 +56,7 @@ const TaskCreate = () => {
 
       <div className="glass rounded-2xl p-6">
         <form onSubmit={handleSubmit} className="space-y-4">
+
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Title *</label>
             <input
@@ -119,17 +122,21 @@ const TaskCreate = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Assigned To (User ID) *</label>
-            <input
-              type="number"
+            <label className="block text-sm font-medium text-slate-700 mb-1">Assigned To *</label>
+            <select
               name="assignedToId"
               value={form.assignedToId}
               onChange={handleChange}
               required
-              placeholder="Enter user ID"
               className="w-full border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
-            <p className="text-xs text-slate-400 mt-1">pgAdmin mein users table se ID dekho</p>
+            >
+              <option value="">-- Select User --</option>
+              {users.map(user => (
+                <option key={user.id} value={user.id}>
+                  {user.fullName} ({user.email})
+                </option>
+              ))}
+            </select>
           </div>
 
           <div>
@@ -163,6 +170,7 @@ const TaskCreate = () => {
               Cancel
             </button>
           </div>
+
         </form>
       </div>
     </div>
