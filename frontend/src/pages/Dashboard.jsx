@@ -169,11 +169,10 @@ const StatCard = ({ title, value, icon, iconBg, accent, loading, trend, spark, s
         </h2>
         {trend && trend.label && (
           <div className="flex items-center gap-2 mt-2">
-            <span className={`text-[11px] font-bold px-2 py-[3px] rounded-md inline-flex items-center gap-1 ${
-              trend.dir === "up"
+            <span className={`text-[11px] font-bold px-2 py-[3px] rounded-md inline-flex items-center gap-1 ${trend.dir === "up"
                 ? "text-[var(--success)] bg-[var(--success)]/10"
                 : "text-[var(--danger)] bg-[var(--danger)]/10"
-            }`}>
+              }`}>
               {trend.dir === "up" ? "▲" : "▼"} {trend.label}
             </span>
             {trend.foot && <span className="text-[11px] text-[var(--muted)]">{trend.foot}</span>}
@@ -356,7 +355,7 @@ export default function Dashboard() {
       <div className="flex flex-wrap justify-between items-center gap-4 bg-[var(--card)] border border-[var(--border)] p-5 rounded-2xl shadow-sm">
         <div className="flex items-center gap-4">
           <div className="w-[42px] h-[42px] rounded-xl grid place-items-center text-white font-extrabold shadow-md"
-               style={{ background: "linear-gradient(135deg,#2563eb,#7c3aed)" }}>
+            style={{ background: "linear-gradient(135deg,#2563eb,#7c3aed)" }}>
             CR
           </div>
           <div>

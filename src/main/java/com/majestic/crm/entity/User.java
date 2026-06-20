@@ -65,8 +65,8 @@ public class User implements UserDetails { // <--- UserDetails Implement Kiya
     @CreationTimestamp
     private LocalDateTime createdAt;
 
-    @UpdateTimestamp
-    private LocalDateTime updatedAt;
+    @Column(name = "last_login")
+    private LocalDateTime lastLogin;
 
     // --- UserDetails Methods ---
     @Override

@@ -57,10 +57,14 @@ public class AuthServiceImpl implements AuthService {
                 .type("Bearer")
                 .id(user.getId())
                 .email(user.getEmail())
+                .name(user.getFullName())
+                .phone(user.getPhone())
                 .roles(userDetails.getAuthorities()
                         .stream()
                         .map(GrantedAuthority::getAuthority)
                         .collect(Collectors.toList()))
+                .createdAt(user.getCreatedAt())
+                .lastLogin(user.getLastLogin())
                 .build();
     }
     
