@@ -34,10 +34,14 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     @Transactional
     public CustomerResponse createCustomer(CustomerRequest request) {
-        User assignedTo = getCurrentUser();
+        User currentUser = getCurrentUser();
+        User assignedTo = currentUser;
+
         if (request.getAssignedToId() != null && isAdmin()) {
             assignedTo = userRepository.findById(request.getAssignedToId())
-                    .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + request.getAssignedToId()));
+                    .orElseThrow(() ->
+                            new ResourceNotFoundException(
+                                    "User not found with id: " + request.getAssignedToId()));
         }
 
         Customer customer = Customer.builder()
@@ -47,7 +51,9 @@ public class CustomerServiceImpl implements CustomerService {
                 .address(request.getAddress())
                 .status(request.getStatus())
                 .assignedTo(assignedTo)
+                .company(currentUser.getCompany())
                 .build();
+
         return toResponse(customerRepository.save(customer));
     }
 

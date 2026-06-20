@@ -26,6 +26,88 @@ export default function Settings() {
 
   const [theme, setTheme] = useState('light');
 
+  // --- Users State ---
+  const [users, setUsers] = useState([]);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [editingUser, setEditingUser] = useState(null); // null = list mode, {} = create mode, {...} = edit mode
+  const [userFormData, setUserFormData] = useState({
+    fullName: '', email: '', phone: '', password: '', roleName: 'EMPLOYEE', isActive: true, reportingToId: ''
+  });
+
+  useEffect(() => {
+    if (activeTab === 'users') {
+      loadUsers();
+      setEditingUser(null);
+    }
+  }, [activeTab]);
+
+  const loadUsers = async () => {
+    setUsersLoading(true);
+    try {
+      const res = await api.get('/api/users');
+      setUsers(res.data);
+    } catch (err) {
+      console.error('Failed to load users:', err);
+      setError('Failed to load users.');
+    } finally {
+      setUsersLoading(false);
+    }
+  };
+
+  const handleOpenUserForm = (user = null) => {
+    setError(null);
+    if (user) {
+      setEditingUser(user);
+      setUserFormData({
+        fullName: user.fullName || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        password: '', // Blank for edit
+        roleName: user.role || 'EMPLOYEE',
+        isActive: user.isActive !== undefined ? user.isActive : (user.active !== undefined ? user.active : true),
+        reportingToId: user.reportingToId || ''
+      });
+    } else {
+      setEditingUser({}); // Empty obj means Create new
+      setUserFormData({
+        fullName: '', email: '', phone: '', password: '', roleName: 'EMPLOYEE', isActive: true, reportingToId: ''
+      });
+    }
+  };
+
+  const handleSaveUser = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    setError(null);
+    try {
+      const payload = { ...userFormData, reportingToId: userFormData.reportingToId || null };
+      if (editingUser && editingUser.id) {
+        // Edit
+        await api.put(`/api/users/${editingUser.id}`, payload);
+      } else {
+        // Create
+        await api.post('/api/users', payload);
+      }
+      await loadUsers();
+      setEditingUser(null);
+    } catch (err) {
+      setError(err?.response?.data?.message || 'Failed to save user');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteUser = async (id) => {
+    if (window.confirm("Are you sure you want to delete this user?")) {
+      try {
+        await api.delete(`/api/users/${id}`);
+        loadUsers();
+      } catch (err) {
+        setError(err?.response?.data?.message || 'Failed to delete user');
+      }
+    }
+  }
+
   // Theme ko DOM pe apply karo — yahi miss tha
   useEffect(() => {
     const loadSettings = async () => {
@@ -61,6 +143,7 @@ export default function Settings() {
 
     loadSettings();
   }, []);
+
   const handleSave = async () => {
     setSaving(true);
     setError(null);
@@ -83,11 +166,7 @@ export default function Settings() {
       setTimeout(() => setSaved(false), 3000);
     } catch (err) {
       console.error('Settings save failed:', err);
-      // Backend se actual error message dikhao
-      const msg =
-        err?.response?.data?.message ||
-        err?.response?.data?.error ||
-        'Save nahi ho saka. Dobara try karo.';
+      const msg = err?.response?.data?.message || err?.response?.data?.error || 'Save nahi ho saka. Dobara try karo.';
       setError(msg);
     } finally {
       setSaving(false);
@@ -98,7 +177,7 @@ export default function Settings() {
     { id: 'company', label: 'Company', icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4' },
     { id: 'notifications', label: 'Notifications', icon: 'M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9' },
     { id: 'theme', label: 'Appearance', icon: 'M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01' },
-    { id: 'users', label: 'Users', icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z' },
+    { id: 'users', label: 'Users & Hierarchy', icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z' },
   ];
 
   const SaveButton = () => (
@@ -114,7 +193,7 @@ export default function Settings() {
   return (
     <div className="max-w-4xl mx-auto space-y-6 animate-fade-in pb-10">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-800">Settings</h1>
+        <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Settings</h1>
         {saved && (
           <div className="bg-emerald-50 border border-emerald-200 text-emerald-600 text-sm px-4 py-2 rounded-xl font-medium">
             ✓ Settings saved!
@@ -140,7 +219,7 @@ export default function Settings() {
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
                   activeTab === tab.id
                     ? 'bg-indigo-500/10 text-indigo-600'
-                    : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700'
+                    : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:hover:text-white'
                 }`}
               >
                 <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -153,11 +232,11 @@ export default function Settings() {
         </div>
 
         {/* Content */}
-        <div className="flex-1 glass rounded-2xl p-6">
+        <div className="flex-1 glass rounded-2xl p-6 bg-white dark:bg-slate-900">
 
           {activeTab === 'company' && (
             <div className="space-y-5">
-              <h2 className="text-lg font-bold text-slate-800 mb-4">Company Information</h2>
+              <h2 className="text-lg font-bold text-slate-800 dark:text-white mb-4">Company Information</h2>
               {[
                 { label: 'Company Name', key: 'name', type: 'text' },
                 { label: 'Email', key: 'email', type: 'email' },
@@ -166,12 +245,12 @@ export default function Settings() {
                 { label: 'Website', key: 'website', type: 'text' },
               ].map(field => (
                 <div key={field.key}>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">{field.label}</label>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-white mb-1">{field.label}</label>
                   <input
                     type={field.type}
                     value={company[field.key]}
                     onChange={e => setCompany({ ...company, [field.key]: e.target.value })}
-                    className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm dark:text-slate-100 dark:bg-slate-800 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   />
                 </div>
               ))}
@@ -189,9 +268,9 @@ export default function Settings() {
                 { key: 'taskReminders', label: 'Task Reminders', desc: 'Remind before task due date' },
                 { key: 'leadUpdates', label: 'Lead Status Updates', desc: 'Notify when lead status changes' },
               ].map(item => (
-                <div key={item.key} className="flex items-center justify-between p-4 rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors">
+                <div key={item.key} className="flex items-center justify-between p-4 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
                   <div>
-                    <p className="text-sm font-medium text-slate-700">{item.label}</p>
+                    <p className="text-sm font-medium text-slate-700 dark:text-slate-100">{item.label}</p>
                     <p className="text-xs text-slate-400">{item.desc}</p>
                   </div>
                   <button
@@ -232,32 +311,128 @@ export default function Settings() {
             </div>
           )}
 
-          {activeTab === 'users' && (
+          {activeTab === 'users' && !editingUser && (
             <div className="space-y-4">
-              <h2 className="text-lg font-bold text-slate-800 mb-4">User Management</h2>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-bold text-slate-800">User Management & Hierarchy</h2>
+                <button 
+                  onClick={() => handleOpenUserForm()}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors shadow-sm"
+                >
+                  + Add User
+                </button>
+              </div>
               <div className="space-y-3">
-                {[
-                  { name: 'System Admin', email: 'admin@majesticrealities.com', role: 'ADMIN', id: 1 },
-                  { name: 'Admin User', email: 'admin@majestic.com', role: 'ADMIN', id: 3 },
-                  { name: 'Admin', email: 'newadmin@test.com', role: 'ADMIN', id: 5 },
-                ].map(u => (
-                  <div key={u.id} className="flex items-center gap-4 p-4 rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors">
-                    <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold shrink-0">
-                      {u.name.charAt(0)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-slate-800 truncate">{u.name}</p>
-                      <p className="text-xs text-slate-400 truncate">{u.email}</p>
-                    </div>
-                    <span className="bg-indigo-100 text-indigo-700 text-xs font-semibold px-2.5 py-1 rounded-full shrink-0">
-                      {u.role}
-                    </span>
+                {usersLoading ? (
+                  <div className="text-center py-4 text-slate-500">Loading users...</div>
+                ) : users.length === 0 ? (
+                  <div className="text-center py-4 text-slate-500">No users found</div>
+                ) : (
+                  users.map(u => {
+                    const isUserActive = u.active !== undefined ? u.active : u.isActive;
+                    return (
+                      <div key={u.id} className={`flex items-center gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors ${!isUserActive ? 'opacity-60' : ''}`}>
+                        <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold shrink-0">
+                          {u.fullName ? u.fullName.charAt(0) : (u.email ? u.email.charAt(0) : 'U')}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-slate-800 truncate">
+                            {u.fullName || 'No Name'} 
+                            {u.reportingToName && <span className="text-xs text-slate-400 font-normal ml-2">→ Reports to: {u.reportingToName}</span>}
+                          </p>
+                          <p className="text-xs text-slate-400 truncate">{u.email} • {u.phone}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="bg-slate-100 text-slate-700 text-xs font-semibold px-2.5 py-1 rounded-full shrink-0">
+                            {u.role || 'NO_ROLE'}
+                          </span>
+                          <span className={`${isUserActive ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'} text-xs font-semibold px-2.5 py-1 rounded-full shrink-0`}>
+                            {isUserActive ? 'Active' : 'Disabled'}
+                          </span>
+                          <button 
+                            onClick={() => handleOpenUserForm(u)}
+                            className="text-indigo-600 hover:text-indigo-800 text-sm font-medium ml-2"
+                          >
+                            Edit
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'users' && editingUser && (
+            <div className="space-y-4">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-bold text-slate-800">{editingUser.id ? 'Edit User' : 'Create New User'}</h2>
+                <button 
+                  onClick={() => setEditingUser(null)}
+                  className="text-slate-500 hover:text-slate-700 text-sm font-medium"
+                >
+                  Cancel
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveUser} className="space-y-4 border border-slate-200 dark:border-slate-600 p-5 rounded-2xl bg-white dark:bg-slate-800 shadow-sm">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-100 mb-1">Full Name</label>
+                    <input type="text" required value={userFormData.fullName} onChange={e => setUserFormData({...userFormData, fullName: e.target.value})} className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
                   </div>
-                ))}
-              </div>
-              <div className="border-t border-slate-100 pt-4">
-                <p className="text-xs text-slate-400 text-center">Naye users ke liye Login page ka register API use karo</p>
-              </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-100 mb-1">Email</label>
+                    <input type="email" required value={userFormData.email} onChange={e => setUserFormData({...userFormData, email: e.target.value})} className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-100 mb-1">Phone</label>
+                    <input type="text" required value={userFormData.phone} onChange={e => setUserFormData({...userFormData, phone: e.target.value})} className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-100 mb-1">Password</label>
+                    <input type="password" required={!editingUser.id} placeholder={editingUser.id ? "Leave blank to keep same" : ""} value={userFormData.password} onChange={e => setUserFormData({...userFormData, password: e.target.value})} className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-100 mb-1">Role</label>
+                    <select value={userFormData.roleName} onChange={e => setUserFormData({...userFormData, roleName: e.target.value})} className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                      <option value="ADMIN">ADMIN</option>
+                      <option value="MANAGER">MANAGER</option>
+                      <option value="SALES">SALES</option>
+                      <option value="SUPPORT">SUPPORT</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-100 mb-1">Reporting To (Manager)</label>
+                    <select value={userFormData.reportingToId} onChange={e => setUserFormData({...userFormData, reportingToId: e.target.value})} className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                      <option value="">-- No Manager --</option>
+                      {users.filter(u => u.id !== editingUser.id).map(u => (
+                        <option key={u.id} value={u.id}>{u.fullName} ({u.email})</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 pt-2">
+                  <input type="checkbox" id="isActive" checked={userFormData.isActive} onChange={e => setUserFormData({...userFormData, isActive: e.target.checked})} className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500" />
+                  <label htmlFor="isActive" className="text-sm font-medium text-slate-700 dark:text-slate-100">Account is Active</label>
+                </div>
+
+                <div className="pt-4 flex justify-end gap-3 border-t border-slate-100">
+                  {editingUser && editingUser.id && (
+                    <button type="button" onClick={() => handleDeleteUser(editingUser.id)} className="bg-red-50 text-red-600 hover:bg-red-100 px-4 py-2 rounded-xl text-sm font-semibold transition-colors mr-auto">
+                      Delete User
+                    </button>
+                  )}
+                  <button type="button" onClick={() => setEditingUser(null)} className="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors">
+                    Cancel
+                  </button>
+                  <button type="submit" disabled={saving} className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white px-6 py-2 rounded-xl text-sm font-semibold transition-colors">
+                    {saving ? 'Saving...' : 'Save User'}
+                  </button>
+                </div>
+              </form>
             </div>
           )}
 

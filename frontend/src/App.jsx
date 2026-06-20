@@ -19,6 +19,8 @@ import TaskEdit from './pages/Tasks/TaskEdit.jsx';
 import Profile from './pages/Profile/Profile.jsx';
 import Settings from './pages/Settings/index.jsx';
 import Register from './pages/Register.jsx';
+import TemplateList from './pages/Templates/TemplateList.jsx';
+import TemplateForm from './pages/Templates/TemplateForm.jsx';
 import { AuthProvider } from './contexts/AuthContext.jsx';
 
 function App() {
@@ -48,6 +50,11 @@ function App() {
             <Route path="/tasks/create" element={<TaskCreate />} />
             <Route path="/tasks/:id/edit" element={<TaskEdit />} />
 			
+            {/* Templates Routes */}
+            <Route path="/templates" element={<TemplateList />} />
+            <Route path="/templates/create" element={<TemplateForm />} />
+            <Route path="/templates/:id/edit" element={<TemplateForm />} />
+
             <Route path="/profile" element={<Profile />} />
             <Route path="/settings" element={<Settings />} />
           </Route>
