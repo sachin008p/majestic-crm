@@ -11,4 +11,7 @@ public interface EmailTemplateService {
     EmailTemplateResponse getTemplate(Long id);
     List<EmailTemplateResponse> getAllTemplates();
     void deleteTemplate(Long id);
+    
+    // Sends the template (simulated) to a given lead
+    void sendTemplate(Long templateId, Long leadId);
 }

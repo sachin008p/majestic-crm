@@ -17,4 +17,14 @@ public class EmailTemplateResponse {
     private String body;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    
+    private String category;
+    private Long createdById;
+    private String createdByName;
+    private Boolean isShared;
+    
+    private Integer openCount;
+    private Integer clickCount;
+    private Integer replyCount;
+    private Integer sentCount;
 }

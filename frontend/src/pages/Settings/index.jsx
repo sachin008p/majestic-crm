@@ -31,7 +31,7 @@ export default function Settings() {
   const [usersLoading, setUsersLoading] = useState(false);
   const [editingUser, setEditingUser] = useState(null); // null = list mode, {} = create mode, {...} = edit mode
   const [userFormData, setUserFormData] = useState({
-    fullName: '', email: '', phone: '', password: '', roleName: 'EMPLOYEE', isActive: true, reportingToId: ''
+    fullName: '', email: '', phone: '', password: '', roleName: 'SALES', isActive: true, reportingToId: ''
   });
 
   useEffect(() => {
@@ -63,14 +63,14 @@ export default function Settings() {
         email: user.email || '',
         phone: user.phone || '',
         password: '', // Blank for edit
-        roleName: user.role || 'EMPLOYEE',
+        roleName: user.role || 'SALES',
         isActive: user.isActive !== undefined ? user.isActive : (user.active !== undefined ? user.active : true),
         reportingToId: user.reportingToId || ''
       });
     } else {
       setEditingUser({}); // Empty obj means Create new
       setUserFormData({
-        fullName: '', email: '', phone: '', password: '', roleName: 'EMPLOYEE', isActive: true, reportingToId: ''
+        fullName: '', email: '', phone: '', password: '', roleName: 'SALES', isActive: true, reportingToId: ''
       });
     }
   };
@@ -81,6 +81,13 @@ export default function Settings() {
     setError(null);
     try {
       const payload = { ...userFormData, reportingToId: userFormData.reportingToId || null };
+
+      // Edit mode me agar password blank chhoda hai, to use payload se hata do
+      // taaki backend accidentally password ko blank/null se overwrite na kare
+      if (editingUser && editingUser.id && !payload.password) {
+        delete payload.password;
+      }
+
       if (editingUser && editingUser.id) {
         // Edit
         await api.put(`/api/users/${editingUser.id}`, payload);
@@ -108,7 +115,7 @@ export default function Settings() {
     }
   }
 
-  // Theme ko DOM pe apply karo — yahi miss tha
+  // Theme ko DOM pe apply karo
   useEffect(() => {
     const loadSettings = async () => {
       try {
@@ -134,7 +141,7 @@ export default function Settings() {
 
         const savedTheme = applyTheme(data.theme);
         setTheme(savedTheme);
-        
+
       } catch (err) {
         console.error('Settings load failed:', err);
         setError('Settings load nahi ho sake. Page refresh karo.');
@@ -193,7 +200,7 @@ export default function Settings() {
   return (
     <div className="max-w-4xl mx-auto space-y-6 animate-fade-in pb-10">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Settings</h1>
+        <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 dark:text-[var(--muted)]">Settings</h1>
         {saved && (
           <div className="bg-emerald-50 border border-emerald-200 text-emerald-600 text-sm px-4 py-2 rounded-xl font-medium">
             ✓ Settings saved!
@@ -216,11 +223,10 @@ export default function Settings() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                  activeTab === tab.id
-                    ? 'bg-indigo-500/10 text-indigo-600'
-                    : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:hover:text-white'
-                }`}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${activeTab === tab.id
+                  ? 'bg-indigo-500/10 text-indigo-600'
+                  : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:hover:text-white'
+                  }`}
               >
                 <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={tab.icon} />
@@ -260,7 +266,7 @@ export default function Settings() {
 
           {activeTab === 'notifications' && (
             <div className="space-y-4">
-              <h2 className="text-lg font-bold text-slate-800 mb-4">Notification Preferences</h2>
+              <h2 className="text-lg font-bold text-slate-800 dark:text-white mb-4">Notification Preferences</h2>
               {[
                 { key: 'emailLeads', label: 'New Lead Notifications', desc: 'Email when a new lead is added' },
                 { key: 'emailTasks', label: 'Task Notifications', desc: 'Email when a task is assigned to you' },
@@ -287,7 +293,7 @@ export default function Settings() {
 
           {activeTab === 'theme' && (
             <div className="space-y-4">
-              <h2 className="text-lg font-bold text-slate-800 mb-4">Appearance</h2>
+              <h2 className="text-lg font-bold text-slate-800 dark:text-white mb-4">Appearance</h2>
               <div className="grid grid-cols-2 gap-4">
                 {[
                   { id: 'light', label: 'Light Mode', bg: 'bg-white', border: 'border-slate-200' },
@@ -314,8 +320,8 @@ export default function Settings() {
           {activeTab === 'users' && !editingUser && (
             <div className="space-y-4">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-bold text-slate-800">User Management & Hierarchy</h2>
-                <button 
+                <h2 className="text-lg font-bold text-slate-800 dark:text-white">User Management & Hierarchy</h2>
+                <button
                   onClick={() => handleOpenUserForm()}
                   className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors shadow-sm"
                 >
@@ -336,8 +342,8 @@ export default function Settings() {
                           {u.fullName ? u.fullName.charAt(0) : (u.email ? u.email.charAt(0) : 'U')}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-slate-800 truncate">
-                            {u.fullName || 'No Name'} 
+                          <p className="text-sm font-medium text-slate-800 dark:text-slate-100 truncate">
+                            {u.fullName || 'No Name'}
                             {u.reportingToName && <span className="text-xs text-slate-400 font-normal ml-2">→ Reports to: {u.reportingToName}</span>}
                           </p>
                           <p className="text-xs text-slate-400 truncate">{u.email} • {u.phone}</p>
@@ -349,7 +355,7 @@ export default function Settings() {
                           <span className={`${isUserActive ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'} text-xs font-semibold px-2.5 py-1 rounded-full shrink-0`}>
                             {isUserActive ? 'Active' : 'Disabled'}
                           </span>
-                          <button 
+                          <button
                             onClick={() => handleOpenUserForm(u)}
                             className="text-indigo-600 hover:text-indigo-800 text-sm font-medium ml-2"
                           >
@@ -367,8 +373,8 @@ export default function Settings() {
           {activeTab === 'users' && editingUser && (
             <div className="space-y-4">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-bold text-slate-800">{editingUser.id ? 'Edit User' : 'Create New User'}</h2>
-                <button 
+                <h2 className="text-lg font-bold text-slate-800 dark:text-white">{editingUser.id ? 'Edit User' : 'Create New User'}</h2>
+                <button
                   onClick={() => setEditingUser(null)}
                   className="text-slate-500 hover:text-slate-700 text-sm font-medium"
                 >
@@ -380,32 +386,33 @@ export default function Settings() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-100 mb-1">Full Name</label>
-                    <input type="text" required value={userFormData.fullName} onChange={e => setUserFormData({...userFormData, fullName: e.target.value})} className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+                    <input type="text" required value={userFormData.fullName} onChange={e => setUserFormData({ ...userFormData, fullName: e.target.value })} className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-100 mb-1">Email</label>
-                    <input type="email" required value={userFormData.email} onChange={e => setUserFormData({...userFormData, email: e.target.value})} className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+                    <input type="email" required value={userFormData.email} onChange={e => setUserFormData({ ...userFormData, email: e.target.value })} className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-100 mb-1">Phone</label>
-                    <input type="text" required value={userFormData.phone} onChange={e => setUserFormData({...userFormData, phone: e.target.value})} className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+                    <input type="text" required value={userFormData.phone} onChange={e => setUserFormData({ ...userFormData, phone: e.target.value })} className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-100 mb-1">Password</label>
-                    <input type="password" required={!editingUser.id} placeholder={editingUser.id ? "Leave blank to keep same" : ""} value={userFormData.password} onChange={e => setUserFormData({...userFormData, password: e.target.value})} className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+                    <input type="password" required={!editingUser.id} placeholder={editingUser.id ? "Leave blank to keep same" : ""} value={userFormData.password} onChange={e => setUserFormData({ ...userFormData, password: e.target.value })} className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-100 mb-1">Role</label>
-                    <select value={userFormData.roleName} onChange={e => setUserFormData({...userFormData, roleName: e.target.value})} className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                    <select value={userFormData.roleName} onChange={e => setUserFormData({ ...userFormData, roleName: e.target.value })} className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
                       <option value="ADMIN">ADMIN</option>
                       <option value="MANAGER">MANAGER</option>
+                      <option value="TEAM_LEADER">TEAM LEADER</option>
                       <option value="SALES">SALES</option>
                       <option value="SUPPORT">SUPPORT</option>
                     </select>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-100 mb-1">Reporting To (Manager)</label>
-                    <select value={userFormData.reportingToId} onChange={e => setUserFormData({...userFormData, reportingToId: e.target.value})} className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                    <select value={userFormData.reportingToId} onChange={e => setUserFormData({ ...userFormData, reportingToId: e.target.value })} className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
                       <option value="">-- No Manager --</option>
                       {users.filter(u => u.id !== editingUser.id).map(u => (
                         <option key={u.id} value={u.id}>{u.fullName} ({u.email})</option>
@@ -415,11 +422,11 @@ export default function Settings() {
                 </div>
 
                 <div className="flex items-center gap-2 pt-2">
-                  <input type="checkbox" id="isActive" checked={userFormData.isActive} onChange={e => setUserFormData({...userFormData, isActive: e.target.checked})} className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500" />
+                  <input type="checkbox" id="isActive" checked={userFormData.isActive} onChange={e => setUserFormData({ ...userFormData, isActive: e.target.checked })} className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500" />
                   <label htmlFor="isActive" className="text-sm font-medium text-slate-700 dark:text-slate-100">Account is Active</label>
                 </div>
 
-                <div className="pt-4 flex justify-end gap-3 border-t border-slate-100">
+                <div className="pt-4 flex justify-end gap-3 border-t border-slate-100 dark:border-slate-600">
                   {editingUser && editingUser.id && (
                     <button type="button" onClick={() => handleDeleteUser(editingUser.id)} className="bg-red-50 text-red-600 hover:bg-red-100 px-4 py-2 rounded-xl text-sm font-semibold transition-colors mr-auto">
                       Delete User

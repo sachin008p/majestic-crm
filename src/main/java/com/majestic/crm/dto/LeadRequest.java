@@ -34,4 +34,36 @@ public class LeadRequest {
     private BigDecimal budget;
 
     private Long assignedToId;
+
+    // --- Basic Contact Info ---
+    private String companyName;
+    private String jobTitle;
+    private String city;
+    private String state;
+    private String country;
+    private String linkedinUrl;
+
+    // --- Lead Source & Tracking ---
+    private String campaignName;
+    private String utmMedium;
+    private String utmSource;
+    private String utmCampaign;
+
+    // --- Qualification Data ---
+    private Integer leadScore;
+    private String industry;
+    private String companySize;
+    private BigDecimal annualRevenue;
+    private String timeline;
+    private String painPoints;
+
+    // --- Sales Pipeline Info ---
+    private String dealStage;
+    private Integer probability;
+    private java.time.LocalDateTime nextFollowUp;
+
+    // --- Other Metadata ---
+    private String tags; // Stored as JSON string
+    private String customFields; // Stored as JSON string
+    private Boolean gdprConsent;
 }

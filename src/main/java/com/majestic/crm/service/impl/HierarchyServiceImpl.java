@@ -23,9 +23,18 @@ public class HierarchyServiceImpl implements HierarchyService {
      */
     @Override
     public List<Long> getVisibleUserIds(User currentUser) {
+        // ADMIN can see all leads; other users see only their own.
+        String roleName = currentUser.getRole() != null ? currentUser.getRole().getName() : "";
+        if ("ADMIN".equalsIgnoreCase(roleName) || "SUPER_ADMIN".equalsIgnoreCase(roleName)) {
+            // Return IDs of all users in the system
+            return userRepository.findAll()
+                    .stream()
+                    .map(User::getId)
+                    .collect(java.util.stream.Collectors.toList());
+        }
+        // Non‑admin users see only their own leads
         List<Long> ids = new ArrayList<>();
         ids.add(currentUser.getId());
-        collectSubordinates(currentUser, ids);
         return ids;
     }
 

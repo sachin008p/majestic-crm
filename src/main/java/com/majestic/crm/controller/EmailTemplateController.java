@@ -22,13 +22,11 @@ public class EmailTemplateController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<EmailTemplateResponse> createTemplate(@Valid @RequestBody EmailTemplateRequest request) {
         return new ResponseEntity<>(emailTemplateService.createTemplate(request), HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<EmailTemplateResponse> updateTemplate(@PathVariable Long id, @Valid @RequestBody EmailTemplateRequest request) {
         return ResponseEntity.ok(emailTemplateService.updateTemplate(id, request));
     }
@@ -44,9 +42,14 @@ public class EmailTemplateController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteTemplate(@PathVariable Long id) {
         emailTemplateService.deleteTemplate(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/send")
+    public ResponseEntity<Void> sendTemplate(@PathVariable Long id, @RequestParam Long leadId) {
+        emailTemplateService.sendTemplate(id, leadId);
+        return ResponseEntity.ok().build();
     }
 }

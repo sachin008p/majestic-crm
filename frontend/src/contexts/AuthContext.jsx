@@ -38,6 +38,8 @@ export const AuthProvider = ({ children }) => {
           name: data.name || deriveNameFromEmail(data.email),
           email: data.email || email,
           roles: data.roles || [],
+          phone: data.phone,
+          lastLogin: data.lastLogin
         };
 
         localStorage.setItem(TOKEN_KEY, data.token);

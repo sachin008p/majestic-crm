@@ -19,4 +19,7 @@ public class EmailTemplateRequest {
 
     @NotBlank(message = "Body is required")
     private String body;
+
+    private String category;
+    private Boolean isShared;
 }

@@ -51,6 +51,29 @@ public class LeadServiceImpl implements LeadService {
                 .notes(request.getNotes())
                 .budget(request.getBudget())
                 .assignedTo(assignedTo)
+                .company(currentUser.getCompany())
+                .companyName(request.getCompanyName())
+                .jobTitle(request.getJobTitle())
+                .city(request.getCity())
+                .state(request.getState())
+                .country(request.getCountry())
+                .linkedinUrl(request.getLinkedinUrl())
+                .campaignName(request.getCampaignName())
+                .utmMedium(request.getUtmMedium())
+                .utmSource(request.getUtmSource())
+                .utmCampaign(request.getUtmCampaign())
+                .leadScore(request.getLeadScore() != null ? request.getLeadScore() : 0)
+                .industry(request.getIndustry())
+                .companySize(request.getCompanySize())
+                .annualRevenue(request.getAnnualRevenue())
+                .timeline(request.getTimeline())
+                .painPoints(request.getPainPoints())
+                .dealStage(request.getDealStage() != null ? request.getDealStage() : "PROSPECTING")
+                .probability(request.getProbability() != null ? request.getProbability() : 0)
+                .nextFollowUp(request.getNextFollowUp())
+                .tags(request.getTags())
+                .customFields(request.getCustomFields())
+                .gdprConsent(request.getGdprConsent() != null ? request.getGdprConsent() : false)
                 .build();
 
         return toResponse(leadRepository.save(lead));
@@ -77,6 +100,36 @@ public class LeadServiceImpl implements LeadService {
         lead.setNotes(request.getNotes());
         lead.setBudget(request.getBudget());
         lead.setAssignedTo(assignedTo);
+
+        // Map new fields
+        lead.setCompanyName(request.getCompanyName());
+        lead.setJobTitle(request.getJobTitle());
+        lead.setCity(request.getCity());
+        lead.setState(request.getState());
+        lead.setCountry(request.getCountry());
+        lead.setLinkedinUrl(request.getLinkedinUrl());
+
+        lead.setCampaignName(request.getCampaignName());
+        lead.setUtmMedium(request.getUtmMedium());
+        lead.setUtmSource(request.getUtmSource());
+        lead.setUtmCampaign(request.getUtmCampaign());
+
+        lead.setLeadScore(request.getLeadScore() != null ? request.getLeadScore() : lead.getLeadScore());
+        lead.setIndustry(request.getIndustry());
+        lead.setCompanySize(request.getCompanySize());
+        lead.setAnnualRevenue(request.getAnnualRevenue());
+        lead.setTimeline(request.getTimeline());
+        lead.setPainPoints(request.getPainPoints());
+
+        lead.setDealStage(request.getDealStage());
+        lead.setProbability(request.getProbability() != null ? request.getProbability() : lead.getProbability());
+        lead.setNextFollowUp(request.getNextFollowUp());
+
+        lead.setTags(request.getTags());
+        lead.setCustomFields(request.getCustomFields());
+        if (request.getGdprConsent() != null) {
+            lead.setGdprConsent(request.getGdprConsent());
+        }
 
         return toResponse(leadRepository.save(lead));
     }
@@ -162,6 +215,30 @@ public class LeadServiceImpl implements LeadService {
                 .assignedToName(lead.getAssignedTo() != null ? lead.getAssignedTo().getFullName() : null)
                 .createdAt(lead.getCreatedAt())
                 .updatedAt(lead.getUpdatedAt())
+                .companyName(lead.getCompanyName())
+                .jobTitle(lead.getJobTitle())
+                .city(lead.getCity())
+                .state(lead.getState())
+                .country(lead.getCountry())
+                .linkedinUrl(lead.getLinkedinUrl())
+                .campaignName(lead.getCampaignName())
+                .utmMedium(lead.getUtmMedium())
+                .utmSource(lead.getUtmSource())
+                .utmCampaign(lead.getUtmCampaign())
+                .leadScore(lead.getLeadScore())
+                .industry(lead.getIndustry())
+                .companySize(lead.getCompanySize())
+                .annualRevenue(lead.getAnnualRevenue())
+                .timeline(lead.getTimeline())
+                .painPoints(lead.getPainPoints())
+                .dealStage(lead.getDealStage())
+                .probability(lead.getProbability())
+                .nextFollowUp(lead.getNextFollowUp())
+                .lastContacted(lead.getLastContacted())
+                .tags(lead.getTags())
+                .customFields(lead.getCustomFields())
+                .duplicateCheckId(lead.getDuplicateCheckId())
+                .gdprConsent(lead.getGdprConsent())
                 .build();
     }
 }
