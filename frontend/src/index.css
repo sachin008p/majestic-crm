@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -8,11 +8,19 @@
    BASE THEME (CRM STYLE)
 ========================= */
 @layer base {
+  html {
+    scroll-behavior: smooth;
+  }
   body {
     font-family: 'Outfit', sans-serif;
     background: var(--bg);
     color: var(--text);
-    transition: all 0.3s ease;
+    transition: background 0.3s ease, color 0.3s ease;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  * {
+    box-sizing: border-box;
   }
 }
 
@@ -20,54 +28,53 @@
    LIGHT + DARK CRM THEME
 ========================= */
 :root {
-  --bg: #f6f8fc;
-  --card: #ffffff;
-  --text: #0f172a;
-  --muted: #64748b;
-  --border: #e5e7eb;
+  --bg:      #f4f6fb;
+  --card:    #ffffff;
+  --card-2:  #f8fafc;
+  --text:    #0f172a;
+  --muted:   #64748b;
+  --border:  #e2e8f0;
 
-  --primary: #2563eb;
+  --primary: #4f46e5;
   --success: #16a34a;
-  --warning: #f59e0b;
-  --danger: #dc2626;
+  --warning: #d97706;
+  --danger:  #dc2626;
+  --info:    #0891b2;
 }
 
 html.dark {
-  --bg: #0b1220;
-  --card: #111827;
-  --text: #f8fafc;
-  --muted: #94a3b8;
-  --border: #1f2937;
+  --bg:      #080e1a;
+  --card:    #0f1829;
+  --card-2:  #131f32;
+  --text:    #f1f5f9;
+  --muted:   #94a3b8;
+  --border:  #1e293b;
 
-  --primary: #3b82f6;
+  --primary: #6366f1;
   --success: #22c55e;
   --warning: #fbbf24;
-  --danger: #ef4444;
+  --danger:  #ef4444;
+  --info:    #22d3ee;
 }
 
 /* =========================
-   UTILITIES (NO BLUR HEAVY UI)
+   GLASS UTILITIES
 ========================= */
 @layer utilities {
 
-  /* clean glass (VERY LIGHT - optional use) */
-
-  /* =========================
-   DARK MODE .glass FIX
-   ========================= */
-  .dark .glass {
-    @apply bg-slate-800 border-slate-700 text-slate-100;
-  }
-
   .glass {
     @apply bg-white border border-slate-200 shadow-sm;
+  }
+
+  .dark .glass {
+    @apply bg-slate-900 border-slate-800 text-slate-100;
   }
 
   .glass-dark {
     @apply bg-slate-900 border border-slate-700 shadow-sm text-white;
   }
 
-  /* animations */
+  /* ─── Animations ─── */
   .animate-fade-in {
     animation: fadeIn 0.4s ease-out forwards;
   }
@@ -76,9 +83,13 @@ html.dark {
     animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
 
-  /* CRM card hover polish */
+  .animate-scale-in {
+    animation: scaleIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+
+  /* CRM card hover */
   .crm-card {
-    @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-md;
+    @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-lg;
   }
 }
 
@@ -86,48 +97,166 @@ html.dark {
    KEYFRAMES
 ========================= */
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 @keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.93); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -468px 0; }
+  100% { background-position: 468px 0; }
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
 }
 
 /* =========================
-   DARK MODE TEXT COLOR FIXES (Extended)
-   ========================= */
-.dark .text-slate-500 {
-  color: #cbd5e1;
+   SKELETON LOADING
+========================= */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--border) 25%,
+    color-mix(in srgb, var(--border) 60%, white) 50%,
+    var(--border) 75%
+  );
+  background-size: 400px 100%;
+  animation: shimmer 1.4s ease infinite;
 }
 
-.dark .text-slate-600 {
-  color: #a1a1aa;
+html.dark .skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--border) 25%,
+    color-mix(in srgb, var(--border) 40%, #1e293b) 50%,
+    var(--border) 75%
+  );
+  background-size: 400px 100%;
+  animation: shimmer 1.4s ease infinite;
 }
 
-.dark .text-slate-700 {
-  color: #d1d5db;
+/* =========================
+   STATUS BADGES (global)
+========================= */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 9px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
 }
 
-/* lighter for better contrast */
-.dark .text-slate-800 {
-  color: #e5e7eb;
+/* Lead/deal statuses */
+.b-NEW          { background: #eff6ff; color: #2563eb; }
+.b-CONTACTED    { background: #f5f3ff; color: #7c3aed; }
+.b-QUALIFIED    { background: #ccfbf1; color: #0f766e; }
+.b-NEGOTIATION  { background: #fffbeb; color: #b45309; }
+.b-WON          { background: #f0fdf4; color: #15803d; }
+.b-LOST         { background: #fef2f2; color: #b91c1c; }
+.b-PENDING      { background: #fffbeb; color: #b45309; }
+
+/* Priority */
+.b-HIGH         { background: #fef2f2; color: #b91c1c; }
+.b-MEDIUM       { background: #fffbeb; color: #b45309; }
+.b-LOW          { background: #f0fdf4; color: #15803d; }
+
+/* Neutral */
+.b-NONE         { background: #f8fafc; color: #64748b; }
+
+/* Dark mode badge overrides */
+html.dark .b-NEW          { background: rgba(59,130,246,.15);  color: #93c5fd; }
+html.dark .b-CONTACTED    { background: rgba(139,92,246,.15);  color: #c4b5fd; }
+html.dark .b-QUALIFIED    { background: rgba(20,184,166,.15);  color: #5eead4; }
+html.dark .b-NEGOTIATION  { background: rgba(245,158,11,.15);  color: #fcd34d; }
+html.dark .b-WON          { background: rgba(34,197,94,.15);   color: #86efac; }
+html.dark .b-LOST         { background: rgba(239,68,68,.15);   color: #fca5a5; }
+html.dark .b-PENDING      { background: rgba(245,158,11,.15);  color: #fcd34d; }
+html.dark .b-HIGH         { background: rgba(239,68,68,.15);   color: #fca5a5; }
+html.dark .b-MEDIUM       { background: rgba(245,158,11,.15);  color: #fcd34d; }
+html.dark .b-LOW          { background: rgba(34,197,94,.15);   color: #86efac; }
+
+/* =========================
+   ICON BUTTONS (dashboard)
+========================= */
+.icon-btn {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: transparent;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  color: var(--muted);
+  transition: all 0.2s ease;
+  font-size: 16px;
+}
+.icon-btn:hover {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+  transform: scale(1.05);
 }
 
-/* even lighter */
-.dark .text-slate-900 {
-  color: #f3f4f6;
+.dot-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--danger);
+  border: 2px solid var(--card);
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+/* =========================
+   DARK MODE TEXT FIXES
+========================= */
+.dark .text-slate-500 { color: #cbd5e1; }
+.dark .text-slate-600 { color: #a1a1aa; }
+.dark .text-slate-700 { color: #d1d5db; }
+.dark .text-slate-800 { color: #e5e7eb; }
+.dark .text-slate-900 { color: #f3f4f6; }
+
+/* =========================
+   CUSTOM SCROLLBAR
+========================= */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+}
+
+/* =========================
+   FOCUS VISIBLE RING
+========================= */
+*:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: 4px;
 }
